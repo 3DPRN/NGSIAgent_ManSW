@@ -1,0 +1,9 @@
+is_global = true
+build_property.ApplicationManifest = 
+build_property.StartupObject = _3DPRN_Fiware.Program
+build_property.ApplicationDefaultFont = 
+build_property.ApplicationHighDpiMode = 
+build_property.ApplicationUseCompatibleTextRendering = 
+build_property.ApplicationVisualStyles = 
+build_property.RootNamespace = _3DPRN_Fiware
+build_property.ProjectDir = e:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\

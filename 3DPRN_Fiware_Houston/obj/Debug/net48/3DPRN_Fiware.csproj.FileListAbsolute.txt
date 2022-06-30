@@ -1,0 +1,15 @@
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\bin\Debug\net48\3DPRN_Fiware.exe.config
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\bin\Debug\net48\3DPRN_Fiware.exe
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\bin\Debug\net48\FIWARE.Orion.Client.dll
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\bin\Debug\net48\Newtonsoft.Json.dll
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\obj\Debug\net48\3DPRN_Fiware.csproj.AssemblyReference.cache
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\obj\Debug\net48\3DPRN_Fiware.csproj.SuggestedBindingRedirects.cache
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\obj\Debug\net48\_3DPRN_Fiware.frmMain.resources
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\obj\Debug\net48\_3DPRN_Fiware.Properties.Resources.resources
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\obj\Debug\net48\3DPRN_Fiware.csproj.GenerateResource.cache
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\obj\Debug\net48\3DPRN_Fiware.GeneratedMSBuildEditorConfig.editorconfig
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\obj\Debug\net48\3DPRN_Fiware.AssemblyInfoInputs.cache
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\obj\Debug\net48\3DPRN_Fiware.AssemblyInfo.cs
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\obj\Debug\net48\3DPRN_Fiware.csproj.CoreCompileInputs.cache
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\obj\Debug\net48\3DPRN_Fiware.csproj.CopyComplete
+E:\SRC\VStudio\3DPRN-TOOLS\3DPRN_Fiware\3DPRN_Fiware\obj\Debug\net48\3DPRN_Fiware.exe
