@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "3DPRN_Fiware": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}
