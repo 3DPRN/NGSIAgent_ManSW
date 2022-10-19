@@ -9,15 +9,15 @@ using FIWARE;
 using FIWARE.Orion.Client;
 using FIWARE.Orion.Client.Models;
 using _3DPRN_Fiware;
-using TIPS;
 using System.Windows.Forms;
+using SimpleTCP;
 
 namespace _3DPRN_Fiware
 {
     internal class clsMain
     {
         
-        public TCPIP_Client _onBoardClient;
+        public SimpleTcpClient _onBoardClient;
         Fiware_Orion_Client _orionClient;
         string _prn_ip = "192.168.0.116";
         string _prn_port = "13000";
@@ -37,21 +37,67 @@ namespace _3DPRN_Fiware
                //if (STATUS.Program_Ending) break;
                try
                {
-                    if (_onBoardClient.Connected())
+                    if (_onBoardClient.TcpClient.Connected)
                     {
                         _retryperiod = 5000;
-                        _onBoardClient.Write("~:STATUS_SYSTEM_GET" + VBComp.vbCrLf);  //richiesta stato
+                        SimpleTCP.Message response = _onBoardClient.WriteLineAndGetReply("~:STATUS_SYSTEM_GET\r\n",new TimeSpan(20000));  //richiesta stato
                         System.Diagnostics.Debug.Print("STATUS_SYSTEM_GET");
-                        if (_system_ID != "")
+
+                                                if (_system_ID != "")
                         {
                             _orionClient.GetSystemStatus(_system_ID);
                             _system_Attributes = _orionClient._attributes;
+                        }
+
+                        string data = response.MessageString;
+                        System.Diagnostics.Debug.Print("Evento Arrivato da Server:{0}", data);
+
+                        //parsing data
+                        string[] subs = data.Split(' ', (char)2);
+                        switch (subs[0])
+                        {
+                            case "~:STATUS_SYSTEM":
+                                //deserializzazione
+                                _3DPRN_Fiware.STATUS_SYSTEM systemstatus = new _3DPRN_Fiware.STATUS_SYSTEM();
+
+                                var serializer = new XmlSerializer(typeof(_3DPRN_Fiware.STATUS_SYSTEM), new XmlRootAttribute("STATUS_SYSTEM"));
+                                data = data.Substring(data.IndexOf(" ")).Trim();
+
+                                using (var reader = new System.IO.StringReader(data))
+                                {
+                                    try
+                                    {
+                                        systemstatus = (_3DPRN_Fiware.STATUS_SYSTEM)serializer.Deserialize(reader);
+                                        _system_ID = "WALL1";
+                                        //_orionClient.UpdateSystemStatus(systemstatus);
+                                        var threadOrion = new Thread(() =>
+                                                    _orionClient.UpdateSystemStatus(systemstatus)
+                                               );
+                                        threadOrion.IsBackground = true;
+                                        threadOrion.Start();
+
+
+                                        System.Diagnostics.Debug.Print($"DataArrived End Call");
+
+                                    }
+                                    catch (InvalidCastException exc)
+                                    {
+                                        // recover from exception
+                                        System.Diagnostics.Debug.Print($"DataArrived InvalidCastException");
+                                    }
+
+                                }
+                                break;
+
+                            default:
+                                System.Diagnostics.Debug.Print($"Response {subs[0]}.");
+                                break;
                         }
                     }
                     else
                     {
                         _retryperiod = 60000;
-                        _onBoardClient.Connect();
+                        _onBoardClient.Connect(_prn_ip,int.Parse(_prn_port));
                     }
                     
                   }
@@ -72,24 +118,22 @@ namespace _3DPRN_Fiware
             System.Diagnostics.Debug.Print($"Started.");
 
             //lettura da INI dei parametri
-            _prn_ip=INI.Read("FIWARE_HOUSTON", "IP_Houston", _prn_ip, fileName_PAR);
-            _prn_port = INI.Read("FIWARE_HOUSTON", "Port_Houston", _prn_port, fileName_PAR);
-            _orionClientConfig_BaseUrl = INI.Read("FIWARE_HOUSTON", "OrionClientConfig_BaseUrl", _orionClientConfig_BaseUrl, fileName_PAR); 
-            _orionClientConfig_Token = INI.Read("FIWARE_HOUSTON", "OrionClientConfig_Token", _orionClientConfig_Token, fileName_PAR); 
-         
-            //connessione stampante            
-            _onBoardClient = new TCPIP_Client(_prn_ip, int.Parse(_prn_port));
-            _onBoardClient.DataArrivedEvent += new System.EventHandler(DataArrived);
-            _onBoardClient.LineCommand_End = "|";
-            _onBoardClient.Connect();
 
-            if (_onBoardClient.Connected())
+            _prn_ip = Properties.Settings.Default.prn_ip;
+            _prn_port = Properties.Settings.Default.prn_port;
+            _orionClientConfig_BaseUrl = Properties.Settings.Default.OCB_ip;
+            _orionClientConfig_Token = Properties.Settings.Default.OCB_token;
+                        
+            //connessione stampante            
+            _onBoardClient = new SimpleTcpClient().Connect(_prn_ip, int.Parse(_prn_port));
+            
+            
+            if (_onBoardClient.TcpClient.Connected)
             {
-                _onBoardClient.Write("~:ATI SW=99,TYPECLI=CONTROLBASE,NAMECLI=HOUSTON" + VBComp.vbCrLf);
+                _onBoardClient.Write("~:ATI SW=99,TYPECLI=CONTROLBASE,NAMECLI=HOUSTON\r\n");
 
                 //Istanzia Orion Context Broker
                 _orionClient = new Fiware_Orion_Client(_orionClientConfig_BaseUrl, _orionClientConfig_Token);
-
 
                 //Timer Lettura/scrittura
 
@@ -98,8 +142,6 @@ namespace _3DPRN_Fiware
                 ThreadManagePrinters.Priority = ThreadPriority.Normal;
                 ThreadManagePrinters.IsBackground = true;
                 ThreadManagePrinters.Start();
-
-
             }
             else
             {
@@ -112,56 +154,56 @@ namespace _3DPRN_Fiware
       public void Delete()
       { _orionClient.ClearSystemStatus(); }
 
-        public  void DataArrived(object sender, EventArgs e)
-        {
-            string data = ((TCPIP_Client)sender).DataRead;
-            System.Diagnostics.Debug.Print("Evento Arrivato da Server:{0}", data);
+        //public  void DataArrived(object sender, EventArgs e)
+        //{
+        //    string data = ((TCPIP_Client)sender).DataRead;
+        //    System.Diagnostics.Debug.Print("Evento Arrivato da Server:{0}", data);
 
-            //parsing data
-            string[] subs = data.Split(' ', (char)2);
-            switch (subs[0])
-            {
-                case "~:STATUS_SYSTEM":
-                    //deserializzazione
-                    _3DPRN_Fiware.STATUS_SYSTEM  systemstatus = new _3DPRN_Fiware.STATUS_SYSTEM ();
+        //    //parsing data
+        //    string[] subs = data.Split(' ', (char)2);
+        //    switch (subs[0])
+        //    {
+        //        case "~:STATUS_SYSTEM":
+        //            //deserializzazione
+        //            _3DPRN_Fiware.STATUS_SYSTEM  systemstatus = new _3DPRN_Fiware.STATUS_SYSTEM ();
                                   
-                    var serializer = new XmlSerializer(typeof(_3DPRN_Fiware.STATUS_SYSTEM), new XmlRootAttribute("STATUS_SYSTEM"));
-                    data = data.Substring(data.IndexOf(" ")).Trim();
+        //            var serializer = new XmlSerializer(typeof(_3DPRN_Fiware.STATUS_SYSTEM), new XmlRootAttribute("STATUS_SYSTEM"));
+        //            data = data.Substring(data.IndexOf(" ")).Trim();
 
-                    using (var reader = new System.IO.StringReader(data))
-                    {
-                        try
-                        {
-                           systemstatus = (_3DPRN_Fiware.STATUS_SYSTEM)serializer.Deserialize(reader);
-                           _system_ID = "WALL1";
-                           //_orionClient.UpdateSystemStatus(systemstatus);
-                           var threadOrion = new Thread(() =>
-                                       _orionClient.UpdateSystemStatus(systemstatus)
-                                  );
-                           threadOrion.IsBackground = true;
-                           threadOrion.Start();
+        //            using (var reader = new System.IO.StringReader(data))
+        //            {
+        //                try
+        //                {
+        //                   systemstatus = (_3DPRN_Fiware.STATUS_SYSTEM)serializer.Deserialize(reader);
+        //                   _system_ID = "WALL1";
+        //                   //_orionClient.UpdateSystemStatus(systemstatus);
+        //                   var threadOrion = new Thread(() =>
+        //                               _orionClient.UpdateSystemStatus(systemstatus)
+        //                          );
+        //                   threadOrion.IsBackground = true;
+        //                   threadOrion.Start();
 
 
-                           System.Diagnostics.Debug.Print($"DataArrived End Call");
+        //                   System.Diagnostics.Debug.Print($"DataArrived End Call");
 
-                        }
-                        catch (InvalidCastException exc)
-                        {
-                            // recover from exception
-                            System.Diagnostics.Debug.Print($"DataArrived InvalidCastException");
-                        }
+        //                }
+        //                catch (InvalidCastException exc)
+        //                {
+        //                    // recover from exception
+        //                    System.Diagnostics.Debug.Print($"DataArrived InvalidCastException");
+        //                }
 
-                    }
-                    break;
+        //            }
+        //            break;
 
-                default:
-                    System.Diagnostics.Debug.Print($"Response {subs[0]}.");
-                    break;
-            }
+        //        default:
+        //            System.Diagnostics.Debug.Print($"Response {subs[0]}.");
+        //            break;
+        //    }
 
             
 
 
-        }
+        //}
     }
 }
